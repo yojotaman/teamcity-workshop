@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+
+  teamcity-server:
+    image: jetbrains/teamcity-server
+    ports:
+      - 8080:8111
+    environment:
+      TEAMCITY_DATA_PATH: /data/teamcity_server/datadir/
+    volumes:
+      - ./datadir/:/data/teamcity_server/datadir/
+      - ./logsdir/:/opt/teamcity/logs/
+    networks:
+      - teamcity-local-network
+
+  teamcity-agent-1:
+    image: jetbrains/teamcity-agent
+    environment:
+      SERVER_URL: teamcity-server:8111
+      AGENT_NAME: agent1
+      DOCKER_IN_DOCKER: start
+    user: root
+    privileged: true
+    volumes:
+      - ./agent1-data/:/data/teamcity_agent/conf/
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - teamcity-local-network
+
+  teamcity-agent-2:
+    image: jetbrains/teamcity-agent
+    environment:
+      SERVER_URL: teamcity-server:8111
+      AGENT_NAME: agent2
+      DOCKER_IN_DOCKER: start
+    user: root
+    privileged: true
+    volumes:
+      - ./agent2-data/:/data/teamcity_agent/conf/
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - teamcity-local-network
+
+  teamcity-database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: teamcity
+      POSTGRES_PASSWORD: teamcity
+      POSTGRES_DB: teamcity
+      PGDATA: /data/postgres
+    volumes:
+      - ./pgdata/:/data/postgres/
+    networks:
+      - teamcity-local-network
+
+  flask-api:
+    build:
+      context: .
+      dockerfile: flask_api_demo/Dockerfile.flask
+    ports:
+      - 5000:5000
+    networks:
+      - teamcity-local-network
+
+networks:
+  teamcity-local-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
