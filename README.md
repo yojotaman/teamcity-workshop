@@ -4,7 +4,13 @@
 This is a local teamcity server running a docker on docker agent
 
 
+```
+docker-compose up -d
+```
+
+
 ## Database:
+in case you want to download the postgres pluging from CLI
 
 ```
 docker run -it --name teamcity-server-instance  \
